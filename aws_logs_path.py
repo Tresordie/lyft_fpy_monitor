@@ -77,6 +77,37 @@ class aws_logs_folder_path(object):
         )
 
         """
+        metro hybrid bike AWS logs path
+        """
+        # metro hybrid csv logs
+        self.metro_fatp_csv_logs_aws_file_path = "/Metro-Hybrid/Parametric-v0.1/Upload/"
+
+        # metro 931 txt logs
+        self.metro_fatp931_txt_logs_aws_file_path = (
+            "/Metro-Hybrid/Logs/vcu_fwre-flash-931/vcu_fwre-flash-931/"
+        )
+
+        # metro 932 txt logs
+        self.metro_fatp932_txt_logs_aws_file_path = (
+            "/Metro-Hybrid/Logs/selfdiagonstic-932/selfdiagonstic-932/"
+        )
+
+        # metro 933 txt logs
+        self.metro_fatp933_txt_logs_aws_file_path = (
+            "/Metro-Hybrid/Logs/fatp-ft-933/fatp-ft-933/"
+        )
+
+        # metro 934 txt logs
+        self.metro_fatp934_txt_logs_aws_file_path = (
+            "/Metro-Hybrid/Logs/test-ride-934/test-ride-934/"
+        )
+
+        # metro 935 txt logs
+        self.metro_fatp935_txt_logs_aws_file_path = (
+            "/Metro-Hybrid/Logs/fatp-provision-935/fatp-provision-935/"
+        )
+
+        """
         maple BMS AWS logs path
         """
         # maple csv logs
