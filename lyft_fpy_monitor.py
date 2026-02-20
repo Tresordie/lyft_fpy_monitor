@@ -306,24 +306,26 @@ class MainForm(QMainWindow, Ui_MainWindow):
                 if "FAIL" in filename:
                     # 收集测试不良的csv log文件名，用于后续txt log下载
                     self.matched_failure_csv_files_list.append(filename)
-                    print(f"正在下载测试不良的文件: {filename} ...")
+                    print(f"正在下载测试不良的csv log文件: {filename} ...")
                     self.textBrowser_content += (
-                        f"正在下载测试不良的文件: {filename} ..." + "\n"
+                        f"正在下载测试不良的csv log文件: {filename} ..." + "\n"
                     )
                     self.set_textBrowser_content()
                     self.foxlink_sftp_rsa_access.rlogger.logger.info(
-                        f"正在下载测试不良的文件: {filename} ..."
+                        f"正在下载测试不良的csv log文件: {filename} ..."
                     )
                     self.foxlink_sftp_rsa_access.sftpclient.get(remote_file, local_file)
 
-            print(f"\n所有匹配文件已下载至: {os.path.abspath(self.lineEdit.text())}")
+            print(
+                f"\n所有匹配csv log文件已下载至: {os.path.abspath(self.lineEdit.text())}"
+            )
             self.textBrowser_content += (
-                f"\n所有匹配文件已下载至: {os.path.abspath(self.lineEdit.text())}"
+                f"\n所有匹配csv log文件已下载至: {os.path.abspath(self.lineEdit.text())}"
                 + "\n"
             )
             self.set_textBrowser_content()
             self.foxlink_sftp_rsa_access.rlogger.logger.info(
-                f"\n所有匹配文件已下载至: {os.path.abspath(self.lineEdit.text())}"
+                f"\n所有匹配csv log文件已下载至: {os.path.abspath(self.lineEdit.text())}"
             )
 
         except Exception as e:
@@ -395,8 +397,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
                     "Total number of files: %d" % total_count
                 )
 
-                # 直接在内存中过滤文件名
-                # scan all file name in aws txt logs folder
+                # 找到不良SN，从AWS下载不良SN的txt log文件
                 for filename in all_filenames:
                     for failure_csv_filename in self.matched_failure_csv_files_list:
                         failure_csv_filename_keywords_list = failure_csv_filename.split(
