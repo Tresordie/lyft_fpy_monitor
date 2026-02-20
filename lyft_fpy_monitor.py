@@ -11,6 +11,7 @@
 
 import sys
 import os
+from csv_operate import *
 from datetime import datetime
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
@@ -187,7 +188,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
         self.foxlink_sftp_rsa_access = sftp_rsa_access(
             "s-bd4d248215874269b.server.transfer.ap-southeast-1.amazonaws.com",
             22,
-            "./id_foxlink",
+            "../aws_rsa_key/id_foxlink",
             "foxlink",
         )
         # 连接 SFTP 服务器，下载Foxlink相关文件
@@ -347,7 +348,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
             self.foxlink_sftp_rsa_access = sftp_rsa_access(
                 "s-bd4d248215874269b.server.transfer.ap-southeast-1.amazonaws.com",
                 22,
-                "./id_foxlink",
+                "../aws_rsa_key/id_foxlink",
                 "foxlink",
             )
             # 连接 SFTP 服务器，下载Foxlink相关文件
@@ -450,12 +451,81 @@ class MainForm(QMainWindow, Ui_MainWindow):
 
                 self.matched_failure_txt_files_list = []
 
+                # 统计Top5 failure
+                # 创建一个字典来存储不良记录  FailureSymptom: [ filename1, filename2... ]
+                failure_symptom_dict = defaultdict(list)
+                for filename in self.matched_failure_csv_files_list:
+                    failure_csv_filepath = (
+                        os.path.abspath(self.lineEdit.text()) + "/" + filename
+                    )
+                    print(failure_csv_filepath)
+                    # pass_fail_status中FAIL的row index
+                    # pass_fail_status需要区分大小写
+                    header_row = pd_read_csv_row(failure_csv_filepath, 0)
+                    if "pass_fail_status" in header_row:
+                        pass_fail_status_column = pd_read_csv_column_by_name_header_set(
+                            failure_csv_filepath, "pass_fail_status"
+                        )
+
+                    else:
+                        pass_fail_status_column = pd_read_csv_column_by_name_header_set(
+                            failure_csv_filepath, "PASS_FAIL_STATUS"
+                        )
+
+                    # 通过FAIL的row index找到对应的test_name
+                    if "FAIL" in pass_fail_status_column:
+                        # 不良项对应的index
+                        index_failure_item = pass_fail_status_column.index("FAIL")
+                    else:
+                        print(f"测试不良csv log文件{filename}没有FAIL记录")
+                        self.textBrowser_content += (
+                            f"测试不良csv log文件{filename}没有FAIL记录" + "\n"
+                        )
+                        self.set_textBrowser_content()
+                        self.foxlink_sftp_rsa_access.rlogger.logger.info(
+                            f"测试不良csv log文件{filename}没有FAIL记录"
+                        )
+
+                    if "test_name" in header_row:
+                        failure_symptom = pd_read_csv_column_by_name_header_set(
+                            failure_csv_filepath, "test_name"
+                        )[index_failure_item]
+                    else:
+                        failure_symptom = pd_read_csv_column_by_name_header_set(
+                            failure_csv_filepath, "TEST_NAME"
+                        )[index_failure_item]
+                    print(f"failure_symptom: {failure_symptom}")
+                    failure_symptom_dict[failure_symptom].append(filename)
+
+                sorted_failure_symptom_dict = sorted(
+                    failure_symptom_dict.items(),
+                    key=lambda item: len(item[1]),
+                    reverse=True,
+                )
+                len_sorted_failure_symptom_dict = len(sorted_failure_symptom_dict)
+
+                for i in range(len_sorted_failure_symptom_dict):
+                    print(
+                        f"Top {i + 1} 不良项: {sorted_failure_symptom_dict[i][0]}  出现次数: {len(sorted_failure_symptom_dict[i][1])}"
+                    )
+                    self.textBrowser_content += (
+                        f"Top {i + 1} 不良项: {sorted_failure_symptom_dict[i][0]}  出现次数: {len(sorted_failure_symptom_dict[i][1])}"
+                        + "\n"
+                    )
+                    self.set_textBrowser_content()
+                    self.foxlink_sftp_rsa_access.rlogger.logger.info(
+                        f"Top {i + 1} 不良项: {sorted_failure_symptom_dict[i][0]}  出现次数: {len(sorted_failure_symptom_dict[i][1])}"
+                        + "\n"
+                    )
+
             except Exception as e:
                 print(f"不良的文本文件测试记录下载发生错误: {e}")
                 self.foxlink_sftp_rsa_access.rlogger.logger.info(
                     f"不良的文本文件测试记录下载发生错误: {e}"
                 )
-                self.textBrowser_content += f"发生错误: {e}" + "\n"
+                self.textBrowser_content += (
+                    f"不良的文本文件测试记录下载发生错误: {e}" + "\n"
+                )
                 self.set_textBrowser_content()
             finally:
                 self.foxlink_sftp_rsa_access.sftpclient.close()
@@ -500,9 +570,14 @@ class MainForm(QMainWindow, Ui_MainWindow):
                 self.retest_count += 1
 
         # 计算百分比
-        self.fpy = (self.first_pass_count / self.total_products) * 100
-        self.failure_rate = (self.final_fail_count / self.total_products) * 100
-        self.retest_rate = (self.retest_count / self.total_products) * 100
+        if self.total_products:
+            self.fpy = (self.first_pass_count / self.total_products) * 100
+            self.failure_rate = (self.final_fail_count / self.total_products) * 100
+            self.retest_rate = (self.retest_count / self.total_products) * 100
+        else:
+            self.fpy = 0
+            self.failure_rate = 0
+            self.retest_rate = 0
 
         # 打印结果
         print(f"--- 统计报告 ---")  # noqa: F541
