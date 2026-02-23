@@ -11,11 +11,12 @@
 
 import sys
 import os
-from csv_operate import *
+from csv_operate import pd_read_csv_column_by_name_header_set, pd_read_csv_row
+from QCandyUi import CandyWindow
 from datetime import datetime
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox
-from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
+from PyQt5.QtCore import QDate, Qt
 
 # from PyQt5.QtWidgets import *
 from Ui_fpy_monitor import Ui_MainWindow
@@ -341,6 +342,9 @@ class MainForm(QMainWindow, Ui_MainWindow):
     def find_specific_txt_files_list_from_aws_foxlink_via_calendar_selection(
         self, target_aws_folder_path: str
     ):
+        # 定义用于记录不良项目的index变量
+        index_failure_item = 0
+
         # 如果选择了文件，更新标签显示文件路径
         if self.matched_failure_csv_files_list and self.local_logs_folder_path:
             # 创建一个 SFTP 对象来来设定初始参数
@@ -724,7 +728,19 @@ class MainForm(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
+    # 1. 启用高 DPI 缩放
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    # 2. 建议使用非整数缩放比例（如 125%, 150%）
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
     app = QApplication(sys.argv)
-    win = MainForm()
+    # win = MainForm()
+    win = CandyWindow.createWindow(
+        MainForm(),
+        theme="blueDeep",
+        title="Lyft FPY Monitor [simon.yuan: 18689228890]",
+        ico_path="./red_lyft.ico",
+    )
+
     win.show()
     sys.exit(app.exec())
